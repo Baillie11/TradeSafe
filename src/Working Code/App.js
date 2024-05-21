@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -19,7 +19,6 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loggedOut, setLoggedOut] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -27,15 +26,10 @@ function App() {
       setIsAuthenticated(!!user);
       setLoading(false);
       setLoggedOut(false); // Reset loggedOut state when auth state changes
-      if (user) {
-        navigate('/'); // Redirect to dashboard if authenticated
-      } else {
-        navigate('/auth'); // Redirect to auth if not authenticated
-      }
     });
 
     return () => unsubscribe();
-  }, [navigate]);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -43,7 +37,6 @@ function App() {
       await signOut(auth);
       setLoggedOut(true); // Set loggedOut to true on logout
       console.log('Logged out successfully');
-      navigate('/auth'); // Redirect to auth page after logout
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -54,22 +47,24 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <Header />
-      {isAuthenticated && <NavBar onLogout={handleLogout} />}
-      <div className="content">
-        <Routes>
-          <Route path="/auth" element={<Auth loggedOut={loggedOut} />} />
-          <Route path="/" element={isAuthenticated ? <Dashboard /> : <Navigate to="/auth" />} />
-          <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/auth" />} />
-          <Route path="/transactions" element={isAuthenticated ? <Transactions /> : <Navigate to="/auth" />} />
-          <Route path="/fraud-settings" element={isAuthenticated ? <FraudSettings /> : <Navigate to="/auth" />} />
-          <Route path="/profile" element={isAuthenticated ? <UserProfile /> : <Navigate to="/auth" />} />
-        </Routes>
+    <Router>
+      <div className="App">
+        <Header />
+        {isAuthenticated && <NavBar onLogout={handleLogout} />}
+        <div className="content">
+          <Routes>
+            <Route path="/auth" element={<Auth loggedOut={loggedOut} />} />
+            <Route path="/" element={isAuthenticated ? <Dashboard /> : <Navigate to="/auth" />} />
+            <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/auth" />} />
+            <Route path="/transactions" element={isAuthenticated ? <Transactions /> : <Navigate to="/auth" />} />
+            <Route path="/fraud-settings" element={isAuthenticated ? <FraudSettings /> : <Navigate to="/auth" />} />
+            <Route path="/profile" element={isAuthenticated ? <UserProfile /> : <Navigate to="/auth" />} />
+          </Routes>
+        </div>
+        <Footer />
+        <ToastContainer />
       </div>
-      <Footer />
-      <ToastContainer />
-    </div>
+    </Router>
   );
 }
 
